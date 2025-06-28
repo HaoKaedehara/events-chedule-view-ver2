@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sach Lich cong tac tuan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .fluent-input {
+            padding: 0.5rem;
+            font-size: 14px;
+            border: 1px solid #c8c6c4;
+            border-radius: 0;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.2s ease-in-out;
+        }
+
+        .fluent-input:focus {
+            border-color: #0078d4;
+            /* Fluent blue */
+            box-shadow: none;
+        }
+
+        .fluent-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #323130;
+        }
+
+        .fluent-container {
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-6 d-flex align-items-center">
+                <h2 class="mb-0">Lịch sự kiện tuần</h2>
+            </div>
+            <div class="col-6" style="display: flex; flex-direction: row-reverse;">
+                <button id="loginBtn" class="btn btn-primary" style="display: flex; flex-direction: row-reverse;">
+                    Đăng nhập bằng Google
+                </button>
+                <div id="userInfo" class="bg-info-subtle px-2 py-1"
+                    style="width: fit-content; display: flex; align-items: center; flex-direction: row-reverse; border-radius: 60px;">
+                </div>
+            </div>
+        </div>
+
+        <div id="no-access" class="alert alert-danger d-none">
+            Bạn không có quyền truy cập trang này.
+        </div>
+
+        <style>
+            .form-control {
+                border-radius: 0px;
+            }
+
+            .form-control:focus {
+                color: var(--bs-body-color);
+                background-color: var(--bs-body-bg);
+                border-color: #86b7fe;
+                outline: 0;
+                box-shadow: none;
+            }
+
+            table.rounded-corners {
+                /* Change these properties */
+                --border: 1px solid black;
+                border-radius: 10px;
+
+                /* Don't change these properties */
+                border-spacing: 0;
+                border-collapse: separate;
+                border: var(--border);
+                overflow: hidden;
+            }
+
+            /* Apply border-right to all but last column */
+            table.rounded-corners th:not(:last-child),
+            table.rounded-corners td:not(:last-child) {
+                border-right: var(--border);
+            }
+
+            /* Apply border-bottom to all but last row */
+            table.rounded-corners tr:not(:last-child) td,
+            table.rounded-corners tr:not(:last-child) th {
+                border-bottom: var(--border);
+            }
+
+            /* Optional: Reset default border */
+            table.rounded-corners td,
+            table.rounded-corners th {
+                border: none;
+            }
+
+            .btnAddNew {
+                padding: 5px 18px 5px 14px;
+                color: white;
+                background: linear-gradient(128.84deg, #0f6cbd 20.46%, #3c45ab 72.3%);
+                /* color: rgba(255, 255, 255, 0.4); */
+                font-weight: 600;
+                height: 36px;
+                align-items: center;
+            }
+
+            .btnAddNew:hover {
+                background: linear-gradient(128.84deg, #025caa 20.46%, #222b91 72.3%);
+                color: #fff;
+            }
+
+            .form-check-input:checked {
+                background-color: #11467f;
+                border-color: #11467f;
+            }
+
+            .form-check-input[type=checkbox] {
+                border-radius: 3px;
+            }
+
+            .form-check-input:checked[type=checkbox] {
+                --bs-form-check-bg-image: url(data:image/svg+xml,%3csvg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="%23e3e3e3"%3e%3cpath d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/%3e%3c/svg%3e);
+            }
+        </style>
+
+        <!-- Button trigger modal -->
+        <div class="mt-3">
+            <button type="button" class="btn btn-sm bg-primary-subtle rounded-5 me-3 btnAddNew" data-bs-toggle="modal"
+                data-bs-target="#modalAddNew">
+                <i class="fa-solid fa-plus me-2"></i>Thêm mới
+            </button>
+            <button type="button" class="btn btn-sm bg-success-subtle rounded-5 me-3 px-3" id="btnLiveView"
+                style="height: 36px;">
+                <i class="fa-regular fa-eye me-2"></i>Đi đến trang hiển thị
+            </button>
+        </div>
+
+        <div id="resultMsg" class=" col-12"></div>
+
+        <!-- Modal -->
+        <div id="add-form" class="d-none">
+            <div class="modal fade" id="modalAddNew" tabindex="-1" aria-labelledby="modalAddNewLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="modalAddNewLabel">Thêm mới</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="dataForm" class="needs-validation" novalidate>
+                                <div class="row">
+                                    <!-- <div class="mb-3 col-md-6 col-12 d-none">
+                                            <label for="inputId" class="form-label">ID</label>
+                                            <input type="text" class="form-control" id="inputId" required />
+                                            <div class="invalid-feedback">Vui lòng nhập ID.</div>
+                                        </div>
+
+                                        <div class="mb-3 col-md-6 col-12 d-none">
+                                            <label for="inputName" class="form-label">Name</label>
+                                            <input type="text" class="form-control" id="inputName" required />
+                                            <div class="invalid-feedback">Vui lòng nhập tên.</div>
+                                        </div>
+
+                                        <div class="mb-3 col-md-6 col-12 d-none">
+                                            <label for="inputDate" class="form-label">Date</label>
+                                            <input type="date" class="form-control" id="inputDate" required />
+                                            <div class="invalid-feedback">Vui lòng chọn ngày.</div>
+                                        </div>
+
+                                        <div class="mb-3 col-md-6 col-12 d-none">
+                                            <label for="inputNote" class="form-label">Note</label>
+                                            <textarea class="form-control" id="inputNote" rows="2"></textarea>
+                                        </div> -->
+
+                                    <div class="mb-3 col-md-6 col-12">
+                                        <label for="inputTenCuocHop" class="form-label">Tên cuộc họp <span
+                                                class="text-danger">*</span></label>
+                                        <textarea class="form-control" id="inputTenCuocHop" rows="3"
+                                            required></textarea>
+                                        <div class="invalid-feedback">Vui lòng nhập Tên cuộc họp.</div>
+                                    </div>
+                                    <div class="mb-3 col-md-6 col-12">
+                                        <label for="inputTPThamGia" class="form-label">Thành phần tham gia <span
+                                                class="text-danger">*</span></label>
+                                        <textarea class="form-control" id="inputTPThamGia" rows="3" required></textarea>
+                                        <div class="invalid-feedback">Vui lòng nhập Thành phần tham gia.</div>
+                                    </div>
+
+                                    <div class="mb-3 col-md-6 col-12">
+                                        <label for="inputChuTri" class="form-label">Chủ trì</label>
+                                        <input type="text" class="form-control" id="inputChuTri" />
+                                    </div>
+                                    <div class="col-md-6 col-12 mb-3">
+                                        <label for="inputCVChuTri" class="form-label">CV chủ trì</label>
+                                        <input type="text" class="form-control" id="inputCVChuTri" />
+                                    </div>
+
+                                    <div class="mb-3 col-12">
+                                        <label for="inputMoTa" class="form-label">Mô tả</label>
+                                        <textarea class="form-control" id="inputMoTa" rows="3"></textarea>
+                                    </div>
+
+                                    <div class="mb-3 col-md-4 col-12">
+                                        <label for="inputNgayBatDau" class="form-label">Ngày bắt đầu <span
+                                                class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" id="inputNgayBatDau" required />
+                                        <div class="invalid-feedback">Vui lòng chọn Ngày bắt đầu.</div>
+                                    </div>
+                                    <div class="mb-3 col-md-4 col-12">
+                                        <label for="inputNgayKetThuc" class="form-label">Ngày kết thúc <span
+                                                class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" id="inputNgayKetThuc" required />
+                                        <div class="invalid-feedback">Vui lòng chọn Ngày bắt đầu.</div>
+                                    </div>
+                                    <div class="mb-3 col-md-4 col-12">
+                                        <label for="inputNoiDienRa" class="form-label">Nơi diễn ra <span
+                                                class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="inputNoiDienRa" required />
+                                        <div class="invalid-feedback">Vui lòng nhập Nơi diễn ra.</div>
+                                    </div>
+
+                                    <div class="mb-3 col-md-4 col-12">
+                                        <label for="inputTGBatDau" class="form-label">Thời gian bắt đầu <span
+                                                class="text-danger">*</span></label>
+                                        <input type="time" class="form-control" id="inputTGBatDau" required />
+                                        <div class="invalid-feedback">Vui lòng nhập Thời gian bắt đầu.</div>
+                                    </div>
+                                    <div class="mb-3 col-md-4 col-12">
+                                        <label for="inputTGKetThuc" class="form-label">Thời gian kết thúc <span
+                                                class="text-danger">*</span></label>
+                                        <input type="time" class="form-control" id="inputTGKetThuc" required />
+                                        <div class="invalid-feedback">Vui lòng nhập Thời gian kết thúc.</div>
+                                    </div>
+                                    <div class="mb-3 col-md-4 col-12">
+                                        <label for="inputThGianCT" class="form-label">Thời gian diễn ra</label>
+                                        <input type="text" class="form-control" id="inputThGianCT" />
+                                    </div>
+
+                                    <div class="mb-3 col-md-4 col-6">
+                                        <label for="inputSoTT" class="form-label">Số TT</label>
+                                        <input type="number" class="form-control" id="inputSoTT" />
+                                    </div>
+                                    <div class="form-check mb-3 col-md-4 col-6"
+                                        style="margin-top: 2.25rem; padding-left: 2.5rem;">
+                                        <input type="checkbox" class="form-check-input" id="inputKhongHienThi" />
+                                        <label class="form-check-label" for="inputKhongHienThi">Không Hiển Thị</label>
+                                    </div>
+                                    <div class="form-check mb-3 col-md-4 col-6"
+                                        style="margin-top: 2.25rem; padding-left: 2.5rem;">
+                                        <input type="checkbox" class="form-check-input" id="inputNoiBat" />
+                                        <label class="form-check-label" for="inputNoiBat">Nổi Bật</label>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="col-12 text-end">
+                                    <button type="submit" class="btn btn-success">Gửi dữ liệu</button>
+                                    <button type="button" class="btn btn-primary" id="btnUpdate"
+                                        onclick="updateToDatabase(editingId)" style="display: none;">Cập nhật</button>
+                                    <button type="button" class="btn btn-secondary ms-2"
+                                        data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+        <!-- Table -->
+        <table class="table table-hover mt-4 rounded-corners" id="renderTable">
+            <thead>
+                <tr>
+                    <th scope="col" style="border-bottom: solid 1px; text-align: center; width: 5%;">STT</th>
+                    <th scope="col" style="border-bottom: solid 1px; text-align: center; width: 35%;">Tên chương trình
+                    </th>
+                    <th scope="col" style="border-bottom: solid 1px; text-align: center; width: 25%;">Thành phần tham dự
+                    </th>
+                    <th scope="col" style="border-bottom: solid 1px; text-align: center; width: 20%;">Thời gian - Địa
+                        điểm</th>
+                    <th scope="col" style="border-bottom: solid 1px; text-align: center; width: 10%;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="eventsBody">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- Bootstrap script -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js"
+        integrity="sha384-7qAoOXltbVP82dhxHAUje59V5r2YsVfBafyUDxEdApLPmcdhBPg1DKg1ERo0BZlK"
+        crossorigin="anonymous"></script>
+
+    <script>
+        // Thay bằng cấu hình Firebase của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPmTK9_GhNNVM-8iuxImEM56Qvsx8c-Fk",
+            authDomain: "weekschedule.firebaseapp.com",
+            databaseURL: "https://weekschedule-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "weekschedule",
+            storageBucket: "weekschedule.firebasestorage.app",
+            messagingSenderId: "440401123409",
+            appId: "1:440401123409:web:ead4d983a4788e5f140070",
+            measurementId: "G-EE2CPH7M79"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // Gọi signInWithPopup nếu chưa đăng nhập
+        // firebase.auth().onAuthStateChanged((user) => {
+        //     if (!user) {
+        //         // Thử đăng nhập với Google bằng popup (nếu đã từng cấp quyền, sẽ không hiện lại)
+        //         firebase.auth().signInWithPopup(provider)
+        //             .then((result) => {
+        //                 console.log("✅ Đăng nhập thành công:", result.user.email);
+        //                 // Xử lý hiển thị avatar như bình thường
+        //             })
+        //             .catch((error) => {
+        //                 console.error("❌ Google login failed:", error.message);
+        //             });
+        //     } else {
+        //         console.log("✅ Đã đăng nhập:", user.email);
+        //         // Hiển thị avatar + thông tin như bạn đã làm
+        //     }
+        // });
+
+        const loginBtn = document.getElementById('loginBtn');
+        const userInfo = document.getElementById('userInfo');
+
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                loginBtn.style.display = 'none';
+                userInfo.innerHTML = `
+                    <img src="${user.photoURL}" alt="avatar" style="width:45px; height: 45px; border-radius:50%; vertical-align:middle;">
+                    <span class='px-3 py-1 text-end' style='font-size: 14px;'>Xin chào <br> ${user.displayName} (${user.email})</span>
+                `;
+            } else {
+                loginBtn.style.display = 'inline-block';
+                userInfo.textContent = 'Chưa đăng nhập';
+            }
+        });
+
+        loginBtn.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider)
+                .then(result => {
+                    console.log("Đăng nhập thành công:", result.user.email);
+                })
+                .catch(error => {
+                    console.error("Lỗi đăng nhập:", error.message);
+                });
+        });
+
+        const noAccessDiv = document.getElementById("no-access");
+        const addFormDiv = document.getElementById("add-form");
+        const dataForm = document.getElementById("dataForm");
+        const resultMsg = document.getElementById("resultMsg");
+
+        // Kiểm tra đăng nhập và quyền truy cập
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // Đã đăng nhập → show form
+                addFormDiv.classList.remove("d-none");
+                noAccessDiv.classList.add("d-none");
+            } else {
+                // Chưa đăng nhập → ẩn form, thông báo đăng nhập
+                noAccessDiv.textContent = "Bạn chưa đăng nhập. Vui lòng đăng nhập bằng Google.";
+                noAccessDiv.classList.remove("d-none");
+                addFormDiv.classList.add("d-none");
+            }
+        });
+
+        // Form validation + submit
+        // dataForm.addEventListener("submit", (e) => {
+        //     e.preventDefault();
+        //     e.stopPropagation();
+
+        //     if (!dataForm.checkValidity()) {
+        //         dataForm.classList.add("was-validated");
+        //         return;
+        //     }
+
+        //     // const id = document.getElementById("inputId").value.trim();
+        //     // const name = document.getElementById("inputName").value.trim();
+        //     // const date = document.getElementById("inputDate").value;
+        //     // const note = document.getElementById("inputNote").value.trim();
+
+        //     const inputTenCuocHop = document.getElementById("inputTenCuocHop").value.trim();
+        //     const inputChuTri = document.getElementById("inputChuTri").value.trim();
+        //     const inputCVChuTri = document.getElementById("inputCVChuTri").value.trim();
+        //     const inputMoTa = document.getElementById("inputMoTa").value.trim();
+        //     const inputNgayBatDau = formatDateToDDMMYYYY("inputNgayBatDau");
+        //     const inputNgayKetThuc = formatDateToDDMMYYYY("inputNgayKetThuc");
+        //     const inputNoiDienRa = document.getElementById("inputNoiDienRa").value.trim();
+        //     const inputTGBatDau = document.getElementById("inputTGBatDau").value;
+        //     const inputTGKetThuc = document.getElementById("inputTGKetThuc").value;
+        //     const inputThGianCT = document.getElementById("inputTGKetThuc").value;
+        //     const inputSoTT = document.getElementById("inputSoTT").value;
+        //     const inputKhongHienThi = document.getElementById("inputKhongHienThi").value == 'on';
+        //     const inputNoiBat = document.getElementById("inputNoiBat").value == 'on';
+
+        //     // Ghi dữ liệu vào Firebase Realtime Database
+        //     const newKey = db.ref().child("Events/Item").push().key;
+
+        //     db.ref("Events/" + newKey).set({
+        //         // id,
+        //         // name,
+        //         // date,
+        //         // note,
+        //         TenCuocHop: inputTenCuocHop,
+        //         ChuTri: inputChuTri,
+        //         CVChuTri: inputCVChuTri,
+        //         MoTa: inputMoTa,
+        //         NgayBatDau: inputNgayBatDau,
+        //         NgayKetThuc: inputNgayKetThuc,
+        //         NoiDienRa: inputNoiDienRa,
+        //         TGBatDau: inputTGBatDau,
+        //         TGKetThuc: inputTGKetThuc,
+        //         ThGianCT: inputThGianCT,
+        //         SoTT: inputSoTT,
+        //         KhongHienThi: inputKhongHienThi,
+        //         NoiBat: inputNoiBat,
+        //         createdBy: auth.currentUser.email
+        //     }).then(() => {
+        //         resultMsg.innerHTML = `<div class="alert alert-success">Thêm dữ liệu thành công!</div>`;
+        //         dataForm.reset();
+        //         dataForm.classList.remove("was-validated");
+        //         bootstrap.Modal.getInstance(document.getElementById("modalAddNew")).hide()
+        //     }).catch(err => {
+        //         resultMsg.innerHTML = `<div class="alert alert-danger">Lỗi khi thêm dữ liệu: ${err.message}</div>`;
+        //         bootstrap.Modal.getInstance(document.getElementById("modalAddNew")).hide()
+        //     });
+        // });
+
+
+
+        // Check quyền thêm
+        function checkWritePermission() {
+            const testRef = firebase.database().ref('Events/permission_test');
+
+            return testRef.set(true)
+                .then(() => {
+                    // Xóa luôn sau khi test
+                    return testRef.remove();
+                })
+                .then(() => true)  // Có quyền write
+                .catch(() => false); // Không có quyền
+        }
+
+        // Sử dụng:
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                checkWritePermission().then(canWrite => {
+                    if (canWrite) {
+                        console.log("User có quyền ghi dữ liệu");
+                        // Hiển thị form
+                    } else {
+                        console.log("User không có quyền ghi dữ liệu");
+                        // Ẩn form hoặc thông báo
+                    }
+                });
+            } else {
+                // Chưa đăng nhập
+            }
+        });
+
+        //Một số hàm định dạng data
+        function formatDateToDDMMYYYY(inputId) {
+            const inputDate = document.getElementById(inputId).value;
+            if (!inputDate) return '';
+            const [year, month, day] = inputDate.split("-");
+            return `${day}/${month}/${year}`;
+        }
+        function parseTimeToMinutes(timeStr) {
+            const [hours, minutes] = timeStr.split(":").map(Number);
+            return hours * 60 + minutes;
+        }
+
+        function formatMinutesToHHMM(minutes) {
+            const h = String(Math.floor(minutes / 60)).padStart(2, "0");
+            const m = String(minutes % 60).padStart(2, "0");
+            return `${h}:${m}`;
+        }
+
+        function calculateAndSetDuration() {
+            const startVal = document.getElementById("inputTGBatDau").value;
+            const endVal = document.getElementById("inputTGKetThuc").value;
+            const durationInput = document.getElementById("inputThGianCT");
+
+            if (startVal && endVal) {
+                let startMins = parseTimeToMinutes(startVal);
+                let endMins = parseTimeToMinutes(endVal);
+
+                // Kiểm tra hợp lệ: thời gian kết thúc phải lớn hơn thời gian bắt đầu
+                if (endMins <= startMins) {
+                    alert("Thời gian kết thúc phải lớn hơn thời gian bắt đầu!");
+                    durationInput.value = "";
+                    document.getElementById("inputTGKetThuc").value = "";
+                    return;
+                }
+
+                let diff = endMins - startMins;
+                durationInput.value = formatMinutesToHHMM(diff);
+            } else {
+                durationInput.value = "";
+            }
+        }
+
+        // Gắn sự kiện để tự động kiểm tra khi người dùng thay đổi input
+        // document.getElementById("inputTGBatDau").addEventListener("change", calculateAndSetDuration);
+        // document.getElementById("inputTGKetThuc").addEventListener("change", calculateAndSetDuration);
+
+
+        // Hàm load dữ liệu ra table
+        // function loadEvents() {
+        //     db.ref("Events").once("value").then(snapshot => {
+        //         const tbody = document.getElementById("eventsBody");
+        //         tbody.innerHTML = "";
+
+        //         let index = 1;
+        //         snapshot.forEach(childSnapshot => {
+        //             const data = childSnapshot.val();
+        //             const tr = document.createElement("tr");
+
+        //             tr.innerHTML = `
+        //                 <td>${index++}</td>
+        //                 <td>${data.TenCuocHop || "Chương trình chưa có tiêu đề"}</td>
+        //                 <td>${data.TPThamGia || "Chưa có thành phần tham dự"}</td>
+        //                 <td>${data.NgayBatDau || "BeginDate"} - ${data.NgayKetThuc || "EndAt"} <br>
+        //                     ${data.TGBatDau || "BeginAt"} - ${data.TGKetThuc || "EndAt"} <br>
+        //                     ${data.NoiDienRa || "Tại:"}
+        //                     </td>
+        //                 <td>${data.inputKhongHienThi ? "Có" : "Không"}</td>
+        //                 <td>${data.inputNoiBat ? "Có" : "Không"}</td>
+        //                 `;
+        //             tbody.appendChild(tr);
+        //         });
+        //     });
+        // }
+
+        let eventRef = db.ref("Events");
+
+        function listenToEvents() {
+            eventRef.off(); // Hủy mọi listener cũ để tránh trùng
+            eventRef.on("value", snapshot => {
+                console.log("Load Data to table."); // <- giờ sẽ chỉ log 1 lần
+                renderTableFromSnapshot(snapshot);
+            });
+        }
+
+        window.addEventListener("DOMContentLoaded", listenToEvents);
+
+        function renderTableFromSnapshot(snapshot) {
+            const tbody = document.getElementById("eventsBody");
+            tbody.innerHTML = "";
+            let index = 1;
+            const children = []; // <- Lưu các childSnapshot ở đây
+
+            //     snapshot.forEach(child => {
+            //         children.push(child); // <- Đẩy vào mảng
+
+            //         const data = child.val();
+            //         const key = child.key;
+
+            //         const tr = document.createElement("tr");
+
+            //         tr.innerHTML = `
+            //     <td class="text-center">${index++}</td>
+            //     <td>${isEventOver(data.NgayKetThuc, data.TGKetThuc) ? '<small>[Đã kết thúc] </small>' : ''}
+            //         ${data.TenCuocHop || "<span class='text-danger'>Chưa có tiêu đề</span>"}
+            //         ${data.KhongHienThi ? '<i class="fa-sm ms-1 fa-regular fa-eye-slash"></i>' : '<i class="fa-sm ms-1 fa-regular fa-eye" style="color: #74C0FC;"></i>'}
+            //         ${data.NoiBat ? '<i class="fa-sm ms-1 fa-regular fa-star" style="color: #FFD43B;"></i>' : ""}
+            //     </td>
+            //     <td>${data.TPThamGia || "<span class='text-danger'>Không có thành phần</span>"}</td>
+            //     <td>${data.NgayBatDau || "<span class='text-danger'>--</span>"} - ${data.NgayKetThuc || "<span class='text-danger'>--</span>"}<br>
+            //         ${data.TGBatDau || "<span class='text-danger'>--</span>"} - ${data.TGKetThuc || "<span class='text-danger'>--</span>"}<br> ${data.NoiDienRa || "<span class='text-danger'>--</span>"}</td>
+            //     <td>
+            //         <button type="button" class="btn btn-sm mt-1 btn-warning" title="Chỉnh sửa"><i class="fa-regular fa-pen-to-square"></i></button>
+            //         <button type="button" class="btn btn-sm mt-1 btn-danger delete-btn" title="Xóa" data-id="${key}"><i class="fa-regular fa-trash-can"></i></button>
+            //     </td>
+            // `;
+
+            //         tbody.appendChild(tr);
+            //     });
+
+            // Bước 1: Push tất cả dữ liệu vào mảng
+            snapshot.forEach(child => {
+                const data = child.val();
+                const key = child.key;
+                children.push({ key, data });
+            });
+
+            // Bước 2: Sort mảng theo NgayBatDau rồi TGBatDau
+            children.sort((a, b) => {
+                const dateA = convertDate(a.data.NgayBatDau); // yyyy-mm-dd
+                const dateB = convertDate(b.data.NgayBatDau);
+                if (dateA < dateB) return -1;
+                if (dateA > dateB) return 1;
+
+                // Nếu cùng ngày thì so theo giờ bắt đầu
+                const timeA = a.data.TGBatDau || "";
+                const timeB = b.data.TGBatDau || "";
+                return timeA.localeCompare(timeB);
+            });
+
+            // Bước 3: Render bảng
+            children.forEach(({ key, data }) => {
+                const tr = document.createElement("tr");
+
+                // tr.innerHTML = `
+                //     <td>[${index++}]</td>
+                //     <td>
+                //         ${data.TenCuocHop || "Chương trình chưa có tiêu đề"}
+                //         ${data.inputKhongHienThi ? '<i class="fa-sm ms-1 fa-regular fa-eye" style="color: #74C0FC;"></i>' : '<i class="fa-sm ms-1 fa-regular fa-eye-slash"></i>'}
+                //         ${data.inputNoiBat ? '<i class="fa-sm ms-1 fa-regular fa-star" style="color: #FFD43B;"></i>' : ""}
+                //     </td>
+                //     <td>${data.TPThamGia || "Chưa có thành phần tham dự"}</td>
+                //     <td>${data.TGBatDau || "BeginAt"} - ${data.TGKetThuc || "EndAt"}<br>${data.NoiDienRa || "Tại:"}</td>
+                //     <td>
+                //         <button type="button" class="btn btn-sm mt-1 btn-warning" title="Chỉnh sửa"><i class="fa-regular fa-pen-to-square"></i></button>
+                //         <button type="button" class="btn btn-sm mt-1 btn-danger delete-btn" title="Xóa" data-id="${key}"><i class="fa-regular fa-trash-can"></i></button>
+                //     </td>
+                // `;
+
+                tr.innerHTML = `
+                <td class="text-center">${index++}</td>
+                <td>${isEventOver(data.NgayKetThuc, data.TGKetThuc) ? '<small>[Đã kết thúc] </small>' : ''}
+                    ${data.TenCuocHop || "<span class='text-danger'>Chưa có tiêu đề</span>"}
+                    ${data.KhongHienThi ? '<i class="fa-sm ms-1 fa-regular fa-eye-slash"></i>' : '<i class="fa-sm ms-1 fa-regular fa-eye" style="color: #74C0FC;"></i>'}
+                    ${data.NoiBat ? '<i class="fa-sm ms-1 fa-regular fa-star" style="color: #FFD43B;"></i>' : ""}
+                </td>
+                <td>${data.TPThamGia || "<span class='text-danger'>Không có thành phần</span>"}</td>
+                <td>${data.NgayBatDau || "<span class='text-danger'>--</span>"} - ${data.NgayKetThuc || "<span class='text-danger'>--</span>"}<br>
+                    ${data.TGBatDau || "<span class='text-danger'>--</span>"} - ${data.TGKetThuc || "<span class='text-danger'>--</span>"}<br> ${data.NoiDienRa || "<span class='text-danger'>--</span>"}</td>
+                <td>
+                    <button type="button" class="btn btn-sm mt-1 btn-warning" title="Chỉnh sửa" data-id="${key}"><i class="fa-regular fa-pen-to-square"></i></button>
+                    <button type="button" class="btn btn-sm mt-1 btn-danger delete-btn" title="Xóa" data-id="${key}"><i class="fa-regular fa-trash-can"></i></button>
+                </td>
+            `;
+
+
+
+                tbody.appendChild(tr);
+            });
+
+            // Gắn sự kiện xóa
+            const deleteButtons = tbody.querySelectorAll(".delete-btn");
+            deleteButtons.forEach(button => {
+                button.addEventListener("click", function () {
+                    const idToDelete = this.getAttribute("data-id");
+
+                    if (deleteFromDatabase(idToDelete)) {
+                        this.closest("tr").remove();
+                    }
+                });
+            });
+
+
+            // Gắn sự kiện chỉnh sửa
+            const editButtons = tbody.querySelectorAll(".btn-warning");
+            editButtons.forEach(button => {
+                button.addEventListener("click", function () {
+                    const key = this.getAttribute("data-id");
+
+                    const child = children.find(child => child.key === key);
+                    if (!child) {
+                        console.warn("Không tìm thấy sự kiện với key:", key);
+                        return;
+                    }
+
+                    const data = child.val ? child.val() : child.data || {};
+                    setFormForEdit(data, key);
+
+                    const modal = new bootstrap.Modal(document.getElementById("modalAddNew"));
+                    modal.show();
+                });
+            });
+
+        }
+
+        function convertDate(ddmmyyyy) {
+            if (!ddmmyyyy) return "";
+            const [dd, mm, yyyy] = ddmmyyyy.split("/");
+            return `${yyyy} -${mm} -${dd} `;
+        }
+
+
+        function isEventOver(endDate0, endTime0) {
+            // Kiểm tra tính hợp lệ của đầu vào
+            if (typeof endDate0 !== 'string' || typeof endTime0 !== 'string') {
+                return false;
+            }
+
+            const dateParts = endDate0.split('/');
+            const timeParts = endTime0.split(':');
+
+            // Kiểm tra định dạng
+            if (dateParts.length !== 3 || timeParts.length !== 2) {
+                return false;
+            }
+
+            const [day, month, year] = dateParts;
+            const [hours, minutes] = timeParts;
+
+            // Định dạng ISO chính xác: yyyy-MM-ddTHH:mm
+            const endDateStr = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+            const endDate = new Date(endDateStr);
+
+            // Nếu sai định dạng sẽ ra Invalid Date
+            if (isNaN(endDate.getTime())) {
+                console.warn("⚠️ Ngày không hợp lệ:", endDateStr);
+                return false;
+            }
+
+            const currentDate = new Date();
+
+            return endDate < currentDate;
+        }
+
+
+        function setFormForEdit(data, id) {
+            console.log("🛠 Dữ liệu đưa vào form:", data);
+            console.log("🛠 Dữ liệu ID đưa vào form:", id);
+
+            editingId = id;
+
+            document.getElementById("inputTenCuocHop").value = data.TenCuocHop || "";
+            document.getElementById("inputTPThamGia").value = data.TPThamGia || "";
+            document.getElementById("inputChuTri").value = data.ChuTri || "";
+            document.getElementById("inputCVChuTri").value = data.CVChuTri || "";
+            document.getElementById("inputMoTa").value = data.MoTa || "";
+            document.getElementById("inputNgayBatDau").value = formatToInputDate(data.NgayBatDau);
+            document.getElementById("inputNgayKetThuc").value = formatToInputDate(data.NgayKetThuc);
+            document.getElementById("inputNoiDienRa").value = data.NoiDienRa || "";
+            document.getElementById("inputTGBatDau").value = formatTimeToInput(data.TGBatDau) || "";
+            document.getElementById("inputTGKetThuc").value = formatTimeToInput(data.TGKetThuc) || "";
+            document.getElementById("inputThGianCT").value = data.ThGianCT || "";
+            document.getElementById("inputSoTT").value = data.SoTT || "";
+            document.getElementById("inputKhongHienThi").checked = !!data.KhongHienThi;
+            document.getElementById("inputNoiBat").checked = !!data.NoiBat;
+
+            // Hiện nút Cập nhật, ẩn nút Gửi nếu cần
+            document.querySelector('button[type="submit"]').style.display = "none";
+            document.getElementById("btnUpdate").style.display = "inline-block";
+        }
+
+
+        function deleteFromDatabase(id) {
+            if (confirm("Bạn có chắc chắn muốn xóa mục này không?")) {
+                const dbRef = firebase.database().ref("Events/" + id);
+                dbRef.remove()
+                    .then(() => {
+                        console.log("Dữ liệu đã được xóa khỏi Firebase.");
+                    })
+                    .catch(error => {
+                        console.error("Lỗi khi xóa dữ liệu: ", error);
+                    });
+                return true;
+            } else {
+                console.log("Hủy thao tác xóa.");
+                return false;
+            }
+        }
+
+        let editingId = null;
+        document.getElementById("dataForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            if (!this.checkValidity()) {
+                this.classList.add("was-validated");
+                return;
+            }
+
+            if (editingId) {
+                const form = document.getElementById("dataForm");
+                if (!form.checkValidity()) {
+                    form.classList.add("was-validated");
+                    return;
+                }
+                updateToDatabase(editingId);
+            } else {
+                addNew(); // Bạn thay bằng hàm thêm dữ liệu mới của bạn
+            }
+        });
+
+        function addNew() {
+            const inputTenCuocHop = document.getElementById("inputTenCuocHop").value.trim();
+            const inputTPThamGia = document.getElementById("inputTPThamGia").value.trim();
+            const inputChuTri = document.getElementById("inputChuTri").value.trim();
+            const inputCVChuTri = document.getElementById("inputCVChuTri").value.trim();
+            const inputMoTa = document.getElementById("inputMoTa").value.trim();
+            const inputNgayBatDau = formatDateToDDMMYYYY("inputNgayBatDau");
+            const inputNgayKetThuc = formatDateToDDMMYYYY("inputNgayKetThuc");
+            const inputNoiDienRa = document.getElementById("inputNoiDienRa").value.trim();
+            const inputTGBatDau = document.getElementById("inputTGBatDau").value;
+            const inputTGKetThuc = document.getElementById("inputTGKetThuc").value;
+            const inputThGianCT = document.getElementById("inputThGianCT").value;
+            const inputSoTT = document.getElementById("inputSoTT").value;
+            const inputKhongHienThi = document.getElementById("inputKhongHienThi").checked;
+            const inputNoiBat = document.getElementById("inputNoiBat").checked;
+
+            const newKey = db.ref().child("Events/Item").push().key;
+
+            db.ref("Events/" + newKey).set({
+                TenCuocHop: inputTenCuocHop,
+                TPThamGia: inputTPThamGia,
+                ChuTri: inputChuTri,
+                CVChuTri: inputCVChuTri,
+                MoTa: inputMoTa,
+                NgayBatDau: inputNgayBatDau,
+                NgayKetThuc: inputNgayKetThuc,
+                NoiDienRa: inputNoiDienRa,
+                TGBatDau: inputTGBatDau,
+                TGKetThuc: inputTGKetThuc,
+                ThGianCT: inputThGianCT,
+                SoTT: inputSoTT,
+                KhongHienThi: inputKhongHienThi,
+                NoiBat: inputNoiBat,
+                createdBy: auth.currentUser.email
+            }).then(() => {
+                document.getElementById("resultMsg").innerHTML = `< div class="alert alert-success" > Thêm dữ liệu thành công!</ > `;
+                resetForm();
+            }).catch(err => {
+                document.getElementById("resultMsg").innerHTML = `< div class="alert alert-danger" > Lỗi khi thêm dữ liệu: ${err.message}</ > `;
+            });
+        }
+
+
+        function updateToDatabase(id) {
+            if (!id) return alert("Không xác định được ID để cập nhật.");
+
+            const inputTenCuocHop = document.getElementById("inputTenCuocHop").value.trim();
+            const inputTPThamGia = document.getElementById("inputTPThamGia").value.trim();
+            const inputChuTri = document.getElementById("inputChuTri").value.trim();
+            const inputCVChuTri = document.getElementById("inputCVChuTri").value.trim();
+            const inputMoTa = document.getElementById("inputMoTa").value.trim();
+            const inputNgayBatDau = formatDateToDDMMYYYY("inputNgayBatDau");
+            const inputNgayKetThuc = formatDateToDDMMYYYY("inputNgayKetThuc");
+            const inputNoiDienRa = document.getElementById("inputNoiDienRa").value.trim();
+            const inputTGBatDau = document.getElementById("inputTGBatDau").value;
+            const inputTGKetThuc = document.getElementById("inputTGKetThuc").value;
+            const inputThGianCT = document.getElementById("inputThGianCT").value;
+            const inputSoTT = document.getElementById("inputSoTT").value;
+            const inputKhongHienThi = document.getElementById("inputKhongHienThi").checked;
+            const inputNoiBat = document.getElementById("inputNoiBat").checked;
+
+            const updatedData = {
+                TenCuocHop: inputTenCuocHop,
+                TPThamGia: inputTPThamGia,
+                ChuTri: inputChuTri,
+                CVChuTri: inputCVChuTri,
+                MoTa: inputMoTa,
+                NgayBatDau: inputNgayBatDau,
+                NgayKetThuc: inputNgayKetThuc,
+                NoiDienRa: inputNoiDienRa,
+                TGBatDau: inputTGBatDau,
+                TGKetThuc: inputTGKetThuc,
+                ThGianCT: inputThGianCT,
+                SoTT: inputSoTT,
+                KhongHienThi: inputKhongHienThi,
+                NoiBat: inputNoiBat,
+                // createdBy: auth.currentUser.email
+            };
+
+            firebase.database().ref("Events/" + id).update(updatedData)
+                .then(() => {
+                    alert("Đã cập nhật thành công.");
+                    resetForm();
+                    reloadTable(); // Nếu bạn có hàm load lại dữ liệu
+                })
+                .catch(error => {
+                    console.error("Lỗi cập nhật dữ liệu:", error);
+                    alert("Có lỗi khi cập nhật.");
+                });
+        }
+
+        document.querySelector(".btnAddNew").addEventListener("click", function () {
+            resetForm(); // <-- reset form & ẩn nút Cập nhật, hiển thị nút Gửi
+        });
+
+        function resetForm() {
+            document.getElementById("dataForm").reset();
+            document.getElementById("dataForm").classList.remove("was-validated");
+            editingId = null;
+
+            // 👇 Hiển thị nút Gửi, ẩn nút Cập nhật
+            document.querySelector('button[type="submit"]').style.display = "inline-block";
+            document.getElementById("btnUpdate").style.display = "none";
+        }
+
+        function formatToInputDate(dateStr) {
+            // Convert dd/mm/yyyy => yyyy-mm-dd for <input type="date">
+            if (!dateStr) return '';
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return '';
+            const [day, month, year] = parts;
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+
+        function formatTimeToInput(timeStr) {
+            if (!timeStr || typeof timeStr !== 'string') return '';
+            const parts = timeStr.split(':');
+            if (parts.length !== 2) return '';
+            let [hours, minutes] = parts;
+
+            hours = hours.padStart(2, '0');
+            minutes = minutes.padStart(2, '0');
+
+            return `${hours}:${minutes}`;
+        }
+
+
+        function reloadTable() {
+            db.ref("Events").once("value").then(renderTableFromSnapshot);
+        }
+
+        document.getElementById("btnLiveView").addEventListener("click", function () {
+            window.open("https://haokaedehara.github.io/events-chedule-list-ver2", "_blank");
+        });
+
+
+    </script>
+</body>
+
+</html>
