@@ -842,10 +842,10 @@
                 NoiBat: inputNoiBat,
                 createdBy: auth.currentUser.email
             }).then(() => {
-                document.getElementById("resultMsg").innerHTML = `< div class="alert alert-success" > Thêm dữ liệu thành công!</ > `;
+                document.getElementById("resultMsg").innerHTML = `<div class="alert alert-success" > Thêm dữ liệu thành công!</div> `;
                 resetForm();
             }).catch(err => {
-                document.getElementById("resultMsg").innerHTML = `< div class="alert alert-danger" > Lỗi khi thêm dữ liệu: ${err.message}</ > `;
+                document.getElementById("resultMsg").innerHTML = `<div class="alert alert-danger" > Lỗi khi thêm dữ liệu: ${err.message}</div> `;
             });
         }
 
